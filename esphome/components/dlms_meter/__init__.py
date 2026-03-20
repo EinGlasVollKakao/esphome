@@ -5,6 +5,7 @@ from esphome.const import CONF_ID, PLATFORM_ESP32, PLATFORM_ESP8266
 
 CODEOWNERS = ["@SimonFischer04"]
 DEPENDENCIES = ["uart"]
+MULTI_CONF = True
 
 CONF_DLMS_METER_ID = "dlms_meter_id"
 CONF_DECRYPTION_KEY = "decryption_key"

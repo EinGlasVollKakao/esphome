@@ -1,6 +1,7 @@
 #include "esphome/core/log.h"
 #include "dlbus.h"
 #include <cstdint>
+#include <numeric>
 
 namespace esphome::dlbus {
 
@@ -99,7 +100,25 @@ void DlBus::loop() {
   //
   const DlBusFrame *frame;
   if (this->store_.get_frame(frame)) {
-    ESP_LOGI(TAG, "read frame: %d bytes, first byte: %x", frame->length, frame->data[0]);
+
+    // TODO, check what type of frame based on device type..
+    if (frame->length < sizeof(Uvr613)) {
+      return;
+    }
+
+    const auto *raw = reinterpret_cast<const Uvr613 *>(frame->data.data());
+
+      uint16_t power = raw->kwh_lo | raw->kwh_hi << 8;
+
+      float power_f = (float)power / 10.0;
+
+      if (this->power_sensor_ != nullptr) {
+        this->power_sensor_->publish_state(power_f);
+      }
+
+    // compute checksum test
+    uint8_t checksum = std::accumulate(frame->data.begin(), frame->data.begin() + (sizeof(Uvr613) - 1), uint8_t{0});
+    ESP_LOGI(TAG, "checksum %d - calculated %d", raw->checksum, checksum);
   }
 }
 
